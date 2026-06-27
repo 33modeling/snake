@@ -53,10 +53,10 @@
   }
 
   /* 레벨 선택 */
-  .levels { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 480px; margin-bottom: 12px; }
+  .levels { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; max-width: 480px; margin-bottom: 12px; max-height: 132px; overflow-y: auto; padding: 4px; }
   .lv {
-    width: 34px; height: 34px; border-radius: 8px; border: 1px solid #46566f;
-    background: #313e52; color: #c8d2e4; font-size: 14px; font-weight: 600; cursor: pointer;
+    width: 30px; height: 30px; border-radius: 7px; border: 1px solid #46566f;
+    background: #313e52; color: #c8d2e4; font-size: 13px; font-weight: 600; cursor: pointer; flex: 0 0 auto;
   }
   .lv.active { background: #ffd166; color: #1b2735; border-color: #ffd166; }
   .lv.cleared { border-color: #06d6a0; color: #06d6a0; }
@@ -136,31 +136,111 @@
   </div>
 
 <script>
-/* ===== 단어 데이터: 한글·영어 각 10단계 (난이도 오름차순) ===== */
+/* ===== 단어 데이터: 한글·영어 각 50단계 (난이도 오름차순) ===== */
 const WORDS_DATA = {
   ko: [
-    ["사과","바다","학교","친구","가족","나무"],
-    ["하늘","구름","사랑","가방","의자","시계","안경"],
-    ["토끼","여우","모래","바람","단풍","무지개","비둘기"],
-    ["자전거","도서관","운동장","미술관","우체국","소나무","잠자리","코끼리"],
-    ["호랑이","다람쥐","원숭이","병아리","강아지","고양이","부엉이","까마귀"],
-    ["냉장고","청소기","선풍기","가습기","컴퓨터","전화기","라디오","카메라","손전등"],
-    ["소방관","경찰서","우편함","가로등","횡단보도","신호등","지하철역","주차장","놀이터"],
-    ["해바라기","민들레","진달래","개나리","무궁화","코스모스","강낭콩","옥수수","고구마","도라지"],
-    ["미끄럼틀","운동선수","소방차","구급차","비행기","헬리콥터","잠수함","기차역","정류장","터미널"],
-    ["백두산","한라산","설악산","금강산","낙동강","두만강","압록강","동해안","서해안","남해안","제주도","울릉도"]
+    ["바다", "하늘", "구름", "안개", "노을", "바람"],
+    ["강물", "호수", "햇살", "이슬", "서리", "우박"],
+    ["나무", "단풍", "낙엽", "새싹", "풀잎", "꽃잎"],
+    ["별빛", "달빛", "폭포", "계곡", "동굴", "절벽"],
+    ["모래", "자갈", "바위", "언덕", "들판", "갯벌", "늪지"],
+    ["천둥", "번개", "폭풍", "태풍", "가뭄", "홍수", "눈비"],
+    ["새벽", "황혼", "일출", "일몰", "어둠", "그늘", "햇빛"],
+    ["능선", "산맥", "평야", "초원", "사막", "빙하", "설원"],
+    ["무지개", "소나기", "진달래", "개나리", "민들레", "나팔꽃", "봉선화", "채송화"],
+    ["매화", "목련", "도라지", "제비꽃", "들국화", "수선화", "동백꽃", "으아리"],
+    ["사자", "토끼", "여우", "나비", "까치", "참새", "붕어", "오리"],
+    ["사슴", "노루", "제비", "개미", "매미", "잉어", "메기", "거위"],
+    ["낙타", "하마", "표범", "늑대", "모기", "파리", "거미", "송어", "연어"],
+    ["수달", "물개", "박쥐", "황새", "백조", "공작", "광어", "농어", "갈치"],
+    ["호랑이", "다람쥐", "너구리", "고양이", "강아지", "멸치", "도미", "방어", "명태"],
+    ["코끼리", "멧돼지", "두더지", "원숭이", "잠자리", "메뚜기", "누에", "지네", "거북이"],
+    ["코뿔소", "오소리", "망아지", "얼룩말", "비둘기", "독수리", "부엉이", "올빼미", "두루미", "갈매기"],
+    ["기러기", "꾀꼬리", "까마귀", "뻐꾸기", "종달새", "풍뎅이", "사마귀", "베짱이", "자라", "악어"],
+    ["고등어", "정어리", "가물치", "가오리", "가자미", "가재", "새우", "문어", "낙지", "조개"],
+    ["진딧물", "진드기", "굼벵이", "까투리", "멧새", "도롱뇽", "도마뱀", "올챙이", "두꺼비", "개구리"],
+    ["토마토", "바나나", "고구마", "옥수수", "시금치", "미나리", "비빔밥", "불고기", "떡볶이", "붕어빵", "깍두기"],
+    ["오렌지", "청포도", "한라봉", "양배추", "양상추", "콩나물", "미역국", "된장국", "칼국수", "단무지", "누룽지"],
+    ["파파야", "무화과", "씀바귀", "고사리", "풋고추", "삼겹살", "삼계탕", "갈비탕", "설렁탕", "단팥빵", "계란빵"],
+    ["두리안", "산딸기", "애호박", "단호박", "양송이", "수제비", "순두부", "콩국수", "만둣국", "국화빵", "인절미"],
+    ["천혜향", "복분자", "건포도", "셀러리", "취나물", "느타리", "새송이", "마늘종", "닭갈비", "갈비찜", "육개장", "비빔면"],
+    ["검은콩", "강낭콩", "완두콩", "밀가루", "쌀가루", "보리밥", "현미밥", "주먹밥", "볶음밥", "백설기", "시루떡", "가래떡"],
+    ["오징어", "전갱이", "가리비", "바지락", "도다리", "새우젓", "명란젓", "장아찌", "오이지", "찹쌀떡", "소보로", "수정과"],
+    ["짜장면", "짬뽕밥", "김치전", "해물전", "동태전", "두부전", "잡채밥", "부침개", "빈대떡", "호박전", "감자전", "팥빙수"],
+    ["메주콩", "잡곡밥", "시래기", "우거지", "묵은지", "항정살", "떡갈비", "떡꼬치", "닭꼬치", "해장국", "순댓국", "북엇국", "토란국"],
+    ["곤드레", "도토리", "메밀묵", "청국장", "고추장", "막국수", "들기름", "참기름", "깨소금", "양념장", "견과류", "깻잎전", "유자청"],
+    ["도서관", "박물관", "미술관", "영화관", "체육관", "자동차", "자전거", "비행기", "소방차", "구급차", "동물원", "식물원", "수영장"],
+    ["백화점", "우체국", "경찰서", "소방서", "주차장", "운동장", "놀이터", "미용실", "이발소", "세탁소", "편의점", "기차역", "지하철"],
+    ["간호사", "변호사", "소방관", "요리사", "미용사", "운전사", "사진사", "조종사", "승무원", "정비사", "경찰관", "회사원", "공무원", "은행원"],
+    ["망원경", "현미경", "청진기", "온도계", "나침반", "손전등", "청소기", "세탁기", "선풍기", "가습기", "다리미", "빗자루", "돋보기", "주전자"],
+    ["정류장", "휴게소", "정육점", "문구점", "매표소", "유원지", "전망대", "화물차", "유람선", "여객선", "잠수함", "경운기", "굴착기", "승용차"],
+    ["사육사", "통역사", "번역가", "건축가", "외교관", "작곡가", "지휘자", "회계사", "만화가", "조각가", "한의사", "수의사", "비행사", "항해사"],
+    ["종합병원", "고속도로", "국제공항", "횡단보도", "지하상가", "여객열차", "화물열차", "고속열차", "경비행기", "인공위성", "우주선", "기관차", "증기선", "잠수정"],
+    ["운동선수", "야구선수", "축구선수", "치과의사", "대장장이", "집배원", "경비원", "판매원", "연구원", "무용수", "곡예사", "잠수부", "마술사", "기관사"],
+    ["손톱깎이", "톱니바퀴", "물레방아", "물뿌리개", "호루라기", "병따개", "전기톱", "용접기", "절단기", "두레박", "갈고리", "손도끼", "확성기", "계산기"],
+    ["전기밥솥", "반짇고리", "나무망치", "소설가", "발명가", "탐험가", "사업가", "정치가", "평론가", "도예가", "재단사", "안무가", "조련사", "미장이"],
+    ["백두산", "한라산", "지리산", "설악산", "금강산", "낙동강", "영산강", "섬진강", "두만강", "압록강", "베트남", "멕시코", "캐나다", "브라질"],
+    ["태백산", "소백산", "오대산", "속리산", "북한산", "대동강", "임진강", "한탄강", "북한강", "남한강", "러시아", "스페인", "그리스", "이집트"],
+    ["삼각주", "봉우리", "골짜기", "산기슭", "비탈길", "폭포수", "화산섬", "활화산", "휴화산", "무인도", "이라크", "시리아", "폴란드", "필리핀"],
+    ["산호초", "산호섬", "강줄기", "물줄기", "강어귀", "나루터", "여울목", "빙하기", "간빙기", "원자핵", "중성자", "양성자", "화합물", "혼합물"],
+    ["산화물", "화학식", "주기율", "방사능", "방사선", "전자기", "자기장", "전기장", "마찰력", "가속도", "운동량", "광합성", "세포막", "세포벽"],
+    ["엽록소", "엽록체", "염색체", "유전자", "단백질", "백혈구", "적혈구", "혈소판", "양서류", "파충류", "포유류", "갑각류", "미생물", "항생제"],
+    ["소행성", "유성우", "은하수", "블랙홀", "적색거성", "천왕성", "해왕성", "명왕성", "태양계", "은하계", "오로라", "백색왜성", "진동수", "주파수"],
+    ["동위원소", "탄수화물", "아미노산", "신경세포", "척추동물", "절지동물", "연체동물", "식물세포", "가치관", "세계관", "도덕성", "깨달음", "호기심", "자부심"],
+    ["정체성", "주체성", "객관성", "주관성", "합리성", "신뢰성", "일관성", "보편성", "다양성", "창의성", "자율성", "가능성", "잠재력", "통찰력"],
+    ["측은지심", "어리석음", "너그러움", "부지런함", "슬기로움", "분별력", "판단력", "추진력", "상상력", "창조력", "필연성", "우연성", "상대성", "절대성"]
   ],
   en: [
-    ["CAT","DOG","SUN","TREE","BOOK","STAR"],
-    ["FISH","BIRD","LION","BEAR","FROG","DUCK","GOAT"],
-    ["APPLE","GRAPE","LEMON","MANGO","PEACH","BREAD","HONEY"],
-    ["TIGER","ZEBRA","HORSE","SHEEP","MOUSE","SNAKE","EAGLE","WHALE"],
-    ["RIVER","OCEAN","GARDEN","FLOWER","FOREST","ISLAND","DESERT","JUNGLE"],
-    ["PLANET","ROCKET","GALAXY","METEOR","SATURN","URANUS","MERCURY","NEPTUNE","JUPITER"],
-    ["GUITAR","VIOLIN","TRUMPET","CYMBALS","MARIMBA","BAGPIPE","UKULELE","OCARINA","TIMPANI"],
-    ["DOLPHIN","PENGUIN","GIRAFFE","LEOPARD","GORILLA","CHEETAH","OSTRICH","BUFFALO","RACCOON","HAMSTER"],
-    ["GERMANY","BELGIUM","ROMANIA","HUNGARY","AUSTRIA","DENMARK","FINLAND","ICELAND","MOROCCO","TANZANIA","MONGOLIA"],
-    ["ELEPHANT","KANGAROO","CROCODILE","BUTTERFLY","DINOSAUR","HEDGEHOG","FLAMINGO","MOSQUITO","SCORPION","ALLIGATOR","PORCUPINE","JELLYFISH"]
+    ["SUN", "RAIN", "TREE", "LEAF", "STAR", "MOON"],
+    ["SKY", "FOG", "ICE", "DEW", "MIST", "SNOW"],
+    ["WIND", "HAIL", "BUD", "SEED", "FERN", "MOSS"],
+    ["ROCK", "SOIL", "ROOT", "VINE", "REED", "PINE"],
+    ["PEAK", "HILL", "LAKE", "POND", "CAVE", "DUNE", "REEF"],
+    ["OAK", "ELM", "BARK", "TWIG", "CROP", "CORN", "HERB"],
+    ["GALE", "HAZE", "GUST", "GLOW", "HALO", "RAY", "ARC"],
+    ["CLOUD", "STORM", "FROST", "FIELD", "RIVER", "OCEAN", "BEACH"],
+    ["PETAL", "STEM", "THORN", "BLOOM", "GRASS", "MAPLE", "BIRCH", "CEDAR"],
+    ["GORGE", "RIDGE", "MARSH", "DELTA", "GLADE", "CLIFF", "SHORE", "BRINE"],
+    ["WOLF", "BEAR", "LION", "DEER", "GOAT", "FROG", "CROW", "DUCK"],
+    ["HARE", "MOLE", "LYNX", "SEAL", "TOAD", "NEWT", "WASP", "MOTH"],
+    ["SWAN", "DOVE", "HAWK", "WREN", "FINCH", "ROBIN", "EAGLE", "HERON", "QUAIL"],
+    ["SHEEP", "HORSE", "MOUSE", "ZEBRA", "CAMEL", "OTTER", "SKUNK", "BISON", "MOOSE"],
+    ["BEAVER", "BADGER", "FERRET", "RABBIT", "MONKEY", "JAGUAR", "COUGAR", "WEASEL", "GOPHER"],
+    ["WALRUS", "DONKEY", "TURKEY", "FALCON", "MAGPIE", "PARROT", "TURTLE", "LIZARD", "IGUANA"],
+    ["BEETLE", "HORNET", "LOCUST", "MANTIS", "WEEVIL", "CICADA", "EARWIG", "GADFLY", "MAGGOT", "APHID"],
+    ["TROUT", "BREAM", "TENCH", "MULLET", "TARPON", "WRASSE", "PLAICE", "SALMON", "MARLIN", "SHRIMP"],
+    ["OCELOT", "BOBCAT", "JACKAL", "COYOTE", "MARMOT", "GIBBON", "BABOON", "GANNET", "OSPREY", "PUFFIN"],
+    ["OKAPI", "TAPIR", "DINGO", "GECKO", "COBRA", "ADDER", "VIPER", "MAMBA", "PYTHON", "IMPALA"],
+    ["GRAPE", "MANGO", "LEMON", "MELON", "ONION", "BERRY", "PEACH", "APPLE", "BREAD", "HONEY", "OLIVE"],
+    ["BANANA", "ORANGE", "CHERRY", "CARROT", "POTATO", "TOMATO", "CELERY", "PEPPER", "GARLIC", "RADISH", "TURNIP"],
+    ["MUFFIN", "WALNUT", "CASHEW", "PEANUT", "RAISIN", "CRACKER", "BUTTER", "CHEESE", "YOGURT", "MUSTARD", "PRETZEL"],
+    ["COOKIE", "SPINACH", "PUMPKIN", "CABBAGE", "LETTUCE", "PARSLEY", "AVOCADO", "APRICOT", "CUSTARD", "PUDDING", "POPCORN"],
+    ["NUTMEG", "GINGER", "PARSNIP", "SAUSAGE", "CHICKEN", "NOODLES", "LASAGNA", "SARDINE", "OATMEAL", "PANCAKE", "WAFFLE", "BISCUIT"],
+    ["GRANOLA", "CUPCAKE", "BROWNIE", "PRALINE", "CARAMEL", "VANILLA", "SHALLOT", "PIMENTO", "GHERKIN", "POMELO", "LYCHEE", "PAPAYA"],
+    ["SQUASH", "SORREL", "MARROW", "FENNEL", "ENDIVE", "CHIVES", "SPROUT", "PRAWNS", "MUSSEL", "OYSTER", "LOBSTER", "SCALLOP"],
+    ["PARFAIT", "SHERBET", "STRUDEL", "COMPOTE", "CRUMPET", "SEAFOOD", "GELATIN", "TAPIOCA", "POLENTA", "RAVIOLI", "RISOTTO", "CALZONE"],
+    ["BROCCOLI", "CUCUMBER", "ZUCCHINI", "EGGPLANT", "RHUBARB", "CHESTNUT", "HAZELNUT", "COCONUT", "MANDARIN", "PLANTAIN", "MUSHROOM", "PORRIDGE", "MACARONI"],
+    ["CHERRIES", "ALMONDS", "MOLASSES", "CINNAMON", "OREGANO", "PAPRIKA", "CHEDDAR", "ANCHOVY", "HALIBUT", "MACKEREL", "RUTABAGA", "KETCHUP", "TURMERIC"],
+    ["TEACHER", "MANAGER", "CASHIER", "PAINTER", "PLUMBER", "SOLDIER", "DENTIST", "JANITOR", "BUTCHER", "CLEANER", "STATION", "LIBRARY", "FACTORY"],
+    ["COLLEGE", "COTTAGE", "MANSION", "THEATER", "STADIUM", "GALLERY", "VILLAGE", "AIRPORT", "SEAPORT", "EMBASSY", "BREWERY", "LAUNDRY", "BALCONY"],
+    ["BICYCLE", "TRACTOR", "TRAILER", "CHARIOT", "GONDOLA", "SCOOTER", "CARAVAN", "MINIVAN", "AIRSHIP", "STEAMER", "CRUISER", "TRAWLER", "DREDGER", "CARRIER"],
+    ["SURGEON", "PRINTER", "GLAZIER", "FARRIER", "JEWELER", "MARINER", "CAPTAIN", "DRUMMER", "JUGGLER", "STEWARD", "ARTISAN", "SPANNER", "HATCHET", "SCRAPER"],
+    ["CHOPPER", "GRINDER", "CROWBAR", "MACHETE", "CLEAVER", "SCALPEL", "FORCEPS", "CALIPER", "COMPASS", "STAPLER", "HACKSAW", "GRANARY", "TERRACE", "VERANDA"],
+    ["HOSPITAL", "PHARMACY", "AIRPLANE", "CARRIAGE", "SAILBOAT", "RICKSHAW", "STAIRWAY", "BASEMENT", "CORRIDOR", "ENGINEER", "MECHANIC", "MUSICIAN", "DESIGNER", "OPERATOR"],
+    ["DIRECTOR", "SERGEANT", "MINISTER", "SURVEYOR", "SCULPTOR", "GARDENER", "WORKSHOP", "DOCKYARD", "SHIPYARD", "VINEYARD", "SCISSORS", "TWEEZERS", "CHAINSAW", "BARRACKS"],
+    ["AMBULANCE", "SUBMARINE", "STEAMSHIP", "SPEEDBOAT", "CATAMARAN", "CARPENTER", "BARTENDER", "ARCHITECT", "PROFESSOR", "SCIENTIST", "CONDUCTOR", "GOLDSMITH", "LOCKSMITH", "WAREHOUSE"],
+    ["APARTMENT", "MONASTERY", "DORMITORY", "FARMHOUSE", "PENTHOUSE", "TOWNHOUSE", "COURTYARD", "BOATHOUSE", "TOLLBOOTH", "BOULEVARD", "PLAYHOUSE", "POORHOUSE", "CEMETERY", "GASWORKS"],
+    ["FREIGHTER", "LIMOUSINE", "STREETCAR", "ROADSTER", "RUNABOUT", "MONORAIL", "PAVILION", "TENEMENT", "FIREHOUSE", "CLUBHOUSE", "BUNKHOUSE", "FISHERMAN", "CRAFTSMAN", "SWORDSMAN"],
+    ["MOUNTAIN", "PLATEAUS", "HIGHLAND", "PENINSULA", "ISTHMUSES", "ESTUARIES", "WATERFALL", "CONTINENT", "GLACIERS", "VOLCANOES", "SAVANNAHS", "PRAIRIES", "WOODLANDS", "SHORELINE"],
+    ["COASTLINE", "HEADLAND", "MEANDERS", "TRIBUTARY", "WATERSHED", "CATARACTS", "DRAINAGE", "WETLANDS", "MARSHLAND", "SEABOARDS", "ICEBERGS", "SANDBARS", "MUDFLATS", "RESERVOIR"],
+    ["PORTUGAL", "BULGARIA", "MALAYSIA", "MONGOLIA", "TANZANIA", "CAMEROON", "HONDURAS", "BARBADOS", "PARAGUAY", "ETHIOPIA", "ZIMBABWE", "ARGENTINA", "AUSTRALIA", "INDONESIA"],
+    ["CAMBODIA", "COLOMBIA", "BOTSWANA", "PAKISTAN", "THAILAND", "SLOVAKIA", "SLOVENIA", "NICARAGUA", "VENEZUELA", "SINGAPORE", "MAURITIUS", "SWAZILAND", "GUATEMALA", "MACEDONIA"],
+    ["MOLECULE", "ELECTRON", "NEUTRONS", "ISOTOPES", "COMPOUND", "REACTION", "CATALYST", "PRESSURE", "VELOCITY", "MOMENTUM", "FRICTION", "CHEMICAL", "ELEMENTS", "PARTICLE"],
+    ["ORGANISM", "BACTERIA", "NUTRIENT", "PROTEINS", "SKELETON", "CARTILAGE", "VERTEBRA", "SYNAPSES", "HORMONES", "ANTIBODY", "GENETICS", "MUTATION", "DIGESTION", "METABOLIC"],
+    ["ALTITUDE", "LATITUDE", "LONGITUDE", "MERIDIAN", "TROPICAL", "TEMPERATE", "MONSOONS", "HUMIDITY", "CLIMATES", "CYCLONES", "TSUNAMIS", "SEDIMENT", "LIMESTONE", "SANDSTONE"],
+    ["ABSTRACT", "CONCEPTS", "THEORIES", "ANALYSIS", "SYNTHESIS", "PARADIGM", "RATIONAL", "INFERENCE", "ARGUMENT", "EVIDENCE", "JUDGMENT", "REASONING", "COGNITION", "PRINCIPLE"],
+    ["EXISTENCE", "AWARENESS", "EMOTIONAL", "KNOWLEDGE", "INTELLECT", "PERCEIVE", "INTUITION", "CURIOSITY", "CREATIVE", "IMAGINING", "MEMORIES", "THINKING", "BELIEVES", "CONSCIOUS"],
+    ["EPHEMERAL", "PARADOXES", "AMBIGUITY", "ABERRANT", "ESOTERIC", "ENIGMATIC", "INTRICATE", "ALLEGORY", "METAPHORS", "PARABLES", "PROFOUND", "SYMBOLISM", "RHETORIC", "ELOQUENCE"]
   ]
 };
 
@@ -178,7 +258,7 @@ const UI = {
         again:"Replay", next:"Next →", clear:"🎉 Cleared!", allclear:"🏆 All Cleared!", finalScore:"Score" }
 };
 
-const TOTAL_LEVELS = 10;
+const TOTAL_LEVELS = 50;
 const DIR = { H:{dr:0,dc:1}, V:{dr:1,dc:0}, D1:{dr:1,dc:1}, D2:{dr:-1,dc:1} };
 
 let lang = "ko";
@@ -193,10 +273,10 @@ const boardEl=$("board"), wordsEl=$("words"), levelsEl=$("levels"),
       statusEl=$("status"), winEl=$("win"), toastEl=$("toast");
 
 function rnd(n){ return Math.floor(Math.random()*n); }
-function sizeFor(lv){ return Math.min(8 + (lv-1), 14); }
+function sizeFor(lv){ return Math.min(8 + Math.floor((lv-1)/4), 16); }
 function dirsFor(lv){
-  if(lv<=2) return [DIR.H, DIR.V];
-  if(lv<=5) return [DIR.H, DIR.V, DIR.D1];
+  if(lv<=6) return [DIR.H, DIR.V];
+  if(lv<=18) return [DIR.H, DIR.V, DIR.D1];
   return [DIR.H, DIR.V, DIR.D1, DIR.D2];
 }
 
@@ -287,6 +367,8 @@ function renderLevels(){
     b.addEventListener("click", ()=>{ level=lv; newGame(); });
     levelsEl.appendChild(b);
   }
+  const a=levelsEl.querySelector(".lv.active");
+  if(a) levelsEl.scrollTop = Math.max(0, a.offsetTop - levelsEl.clientHeight/2 + a.offsetHeight/2);
 }
 
 function cellAt(r,c){ return boardEl.children[r*SIZE + c]; }
