@@ -313,16 +313,31 @@ function moveSel(el){
   clearSel();
   for(const c of curCells) c.classList.add("sel");
 }
+function coordsKey(cells){ return cells.map(c=>c.dataset.r+","+c.dataset.c).join("|"); }
+function placedKey(p){
+  const a=[];
+  for(let i=0;i<p.len;i++) a.push((p.r+p.dr*i)+","+(p.c+p.dc*i));
+  return a.join("|");
+}
+function cancelSel(){ if(!selecting) return; selecting=false; clearSel(); }
 function endSel(){
   if(!selecting) return;
   selecting=false;
-  const text=curCells.map(c=>c.textContent).join("");
-  const rev=curCells.slice().reverse().map(c=>c.textContent).join("");
-  let hit=null;
-  for(const w of WORDS) if(!foundSet.has(w) && (w===text||w===rev)){ hit=w; break; }
+  // 내용이 아니라 좌표(실제 배치 경로)로 매칭 → 우연한 채움글자 오인식 방지
+  const key=coordsKey(curCells);
+  const keyRev=coordsKey(curCells.slice().reverse());
+  let hit=null, already=false;
+  for(const p of placed){
+    const k=placedKey(p);
+    if(k===key || k===keyRev){
+      if(foundSet.has(p.word)) already=true; else hit=p.word;
+      break;
+    }
+  }
   clearSel();
-  if(hit){ onFound(hit); }
-  else if(curCells.length>=2){ onMiss(); }
+  if(hit) onFound(hit);
+  else if(already){ /* 이미 찾은 단어 재드래그 → 무시 (콤보 유지) */ }
+  else if(curCells.length>=2) onMiss();
 }
 
 /* ===== 점수 ===== */
@@ -398,6 +413,7 @@ window.addEventListener("mouseup", endSel);
 boardEl.addEventListener("touchstart", e=>{ const t=e.touches[0]; const el=getCellFromPoint(t.clientX,t.clientY); if(el){ e.preventDefault(); startSel(el); } }, {passive:false});
 boardEl.addEventListener("touchmove", e=>{ if(!selecting) return; e.preventDefault(); const t=e.touches[0]; moveSel(getCellFromPoint(t.clientX,t.clientY)); }, {passive:false});
 window.addEventListener("touchend", endSel);
+window.addEventListener("touchcancel", cancelSel);
 window.addEventListener("resize", ()=>{ if(SIZE) setCellSize(); });
 
 $("newgame").addEventListener("click", newGame);
