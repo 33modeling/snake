@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>단어 찾기</title>
+<style>
+  :root { --cell: 40px; --gap: 4px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    background: linear-gradient(160deg, #1b2735 0%, #090a0f 100%);
+    color: #f0f0f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 10px 36px;
+    user-select: none;
+  }
+  h1 { font-size: 23px; margin: 2px 0; letter-spacing: 1px; }
+  .sub { font-size: 12.5px; color: #8b9bb4; margin-bottom: 12px; text-align: center; }
+
+  /* 점수판 */
+  .scorebar {
+    display: flex; align-items: center; gap: 20px;
+    margin-bottom: 12px;
+    background: #2a3647; padding: 9px 22px; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.35); position: relative;
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; min-width: 52px; }
+  .stat .lbl { font-size: 10.5px; color: #8b9bb4; letter-spacing: .5px; }
+  .stat .val { font-size: 25px; font-weight: 700; color: #ffd166; font-variant-numeric: tabular-nums; }
+  .stat.best .val { color: #06d6a0; font-size: 20px; }
+  .combo {
+    font-size: 15px; font-weight: 700; color: #ff6b6b;
+    min-width: 70px; text-align: center; opacity: 0; transition: opacity .15s;
+  }
+  .combo.on { opacity: 1; animation: pop .3s; }
+  @keyframes pop { 0%{transform:scale(.6);} 60%{transform:scale(1.25);} 100%{transform:scale(1);} }
+
+  .toast {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    font-size: 22px; font-weight: 800; color: #ffd166;
+    text-shadow: 0 2px 6px rgba(0,0,0,.6); pointer-events: none; opacity: 0; white-space: nowrap;
+  }
+  .toast.fly { animation: fly .9s ease-out; }
+  @keyframes fly {
+    0%{opacity:0; transform:translate(-50%,6px) scale(.7);}
+    20%{opacity:1; transform:translate(-50%,-8px) scale(1.1);}
+    100%{opacity:0; transform:translate(-50%,-48px) scale(1);}
+  }
+
+  /* 레벨 선택 */
+  .levels { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 480px; margin-bottom: 12px; }
+  .lv {
+    width: 34px; height: 34px; border-radius: 8px; border: 1px solid #46566f;
+    background: #313e52; color: #c8d2e4; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .lv.active { background: #ffd166; color: #1b2735; border-color: #ffd166; }
+  .lv.cleared { border-color: #06d6a0; color: #06d6a0; }
+  .lv.active.cleared { background: #ffd166; color: #1b2735; }
+
+  /* 보드 */
+  .board {
+    display: grid; gap: var(--gap); background: #2a3647; padding: var(--gap);
+    border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.45); touch-action: none;
+  }
+  .board.miss { animation: shake .3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+  .cell {
+    width: var(--cell); height: var(--cell);
+    display: flex; align-items: center; justify-content: center;
+    background: #f4f6fb; color: #1b2735;
+    font-size: calc(var(--cell) * 0.46); font-weight: 600; border-radius: 7px;
+    transition: background .08s, color .08s, transform .08s;
+  }
+  .cell.sel { background: #ffd166; color: #1b2735; transform: scale(1.05); }
+  .cell.found { background: #06d6a0; color: #fff; }
+
+  /* 단어 목록 */
+  .words { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; max-width: 480px; margin-top: 16px; }
+  .word { background: #313e52; border: 1px solid #46566f; padding: 5px 11px; border-radius: 18px; font-size: 14px; transition: all .15s; }
+  .word.done { background: #06d6a0; border-color: #06d6a0; color: #fff; text-decoration: line-through; opacity: .8; }
+
+  .bar { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  button {
+    background: #ffd166; color: #1b2735; border: none; padding: 9px 16px;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button.alt { background: #313e52; color: #f0f0f5; border: 1px solid #46566f; }
+  button:active { transform: translateY(1px); }
+  .status { font-size: 13px; color: #8b9bb4; }
+
+  .win {
+    position: fixed; inset: 0; background: rgba(9,10,15,.88);
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; z-index: 10; padding: 20px;
+  }
+  .win.show { display: flex; }
+  .win h2 { font-size: 38px; margin: 0; }
+  .win .fs { font-size: 18px; color: #ffd166; }
+  .win .row { display: flex; gap: 12px; }
+</style>
+</head>
+<body>
+  <h1 id="title">🔤 단어 찾기</h1>
+  <div id="sub" class="sub"></div>
+
+  <div class="scorebar">
+    <div class="stat"><span id="lbl-score" class="lbl">점수</span><span id="score" class="val">0</span></div>
+    <div id="combo" class="combo"></div>
+    <div class="stat best"><span id="lbl-best" class="lbl">최고</span><span id="best" class="val">0</span></div>
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <div id="levels" class="levels"></div>
+
+  <div id="board" class="board"></div>
+
+  <div class="bar">
+    <span id="status" class="status"></span>
+    <button id="lang" class="alt">🌐 English</button>
+    <button id="newgame">새 게임</button>
+  </div>
+
+  <div id="words" class="words"></div>
+
+  <div id="win" class="win">
+    <h2 id="win-title">🎉 클리어!</h2>
+    <div id="win-score" class="fs"></div>
+    <div class="row">
+      <button id="again" class="alt">다시 하기</button>
+      <button id="next">다음 레벨 →</button>
+    </div>
+  </div>
+
+<script>
+/* ===== 단어 데이터: 한글·영어 각 10단계 (난이도 오름차순) ===== */
+const WORDS_DATA = {
+  ko: [
+    ["사과","바다","학교","친구","가족","나무"],
+    ["하늘","구름","사랑","가방","의자","시계","안경"],
+    ["토끼","여우","모래","바람","단풍","무지개","비둘기"],
+    ["자전거","도서관","운동장","미술관","우체국","소나무","잠자리","코끼리"],
+    ["호랑이","다람쥐","원숭이","병아리","강아지","고양이","부엉이","까마귀"],
+    ["냉장고","청소기","선풍기","가습기","컴퓨터","전화기","라디오","카메라","손전등"],
+    ["소방관","경찰서","우편함","가로등","횡단보도","신호등","지하철역","주차장","놀이터"],
+    ["해바라기","민들레","진달래","개나리","무궁화","코스모스","강낭콩","옥수수","고구마","도라지"],
+    ["미끄럼틀","운동선수","소방차","구급차","비행기","헬리콥터","잠수함","기차역","정류장","터미널"],
+    ["백두산","한라산","설악산","금강산","낙동강","두만강","압록강","동해안","서해안","남해안","제주도","울릉도"]
+  ],
+  en: [
+    ["CAT","DOG","SUN","TREE","BOOK","STAR"],
+    ["FISH","BIRD","LION","BEAR","FROG","DUCK","GOAT"],
+    ["APPLE","GRAPE","LEMON","MANGO","PEACH","BREAD","HONEY"],
+    ["TIGER","ZEBRA","HORSE","SHEEP","MOUSE","SNAKE","EAGLE","WHALE"],
+    ["RIVER","OCEAN","GARDEN","FLOWER","FOREST","ISLAND","DESERT","JUNGLE"],
+    ["PLANET","ROCKET","GALAXY","METEOR","SATURN","URANUS","MERCURY","NEPTUNE","JUPITER"],
+    ["GUITAR","VIOLIN","TRUMPET","CYMBALS","MARIMBA","BAGPIPE","UKULELE","OCARINA","TIMPANI"],
+    ["DOLPHIN","PENGUIN","GIRAFFE","LEOPARD","GORILLA","CHEETAH","OSTRICH","BUFFALO","RACCOON","HAMSTER"],
+    ["GERMANY","BELGIUM","ROMANIA","HUNGARY","AUSTRIA","DENMARK","FINLAND","ICELAND","MOROCCO","TANZANIA","MONGOLIA"],
+    ["ELEPHANT","KANGAROO","CROCODILE","BUTTERFLY","DINOSAUR","HEDGEHOG","FLAMINGO","MOSQUITO","SCORPION","ALLIGATOR","PORCUPINE","JELLYFISH"]
+  ]
+};
+
+const FILLER = {
+  ko: "가나다라마바사아자차카타파하기니디리미비시이지치커터퍼허구누두루무부수우주거너더러머버서어저고노도로모보소오조구루부수운장강산해도원이리",
+  en: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+};
+
+const UI = {
+  ko: { title:"🔤 단어 찾기", sub:"가로·세로·대각선으로 숨겨진 단어를 드래그해서 찾으세요!",
+        score:"점수", best:"최고", found:"찾음", newgame:"새 게임", langBtn:"🌐 English",
+        again:"다시 하기", next:"다음 레벨 →", clear:"🎉 클리어!", allclear:"🏆 전체 클리어!", finalScore:"점수" },
+  en: { title:"🔤 Word Search", sub:"Drag across the grid to find the hidden words!",
+        score:"Score", best:"Best", found:"found", newgame:"New Game", langBtn:"🌐 한글",
+        again:"Replay", next:"Next →", clear:"🎉 Cleared!", allclear:"🏆 All Cleared!", finalScore:"Score" }
+};
+
+const TOTAL_LEVELS = 10;
+const DIR = { H:{dr:0,dc:1}, V:{dr:1,dc:0}, D1:{dr:1,dc:1}, D2:{dr:-1,dc:1} };
+
+let lang = "ko";
+let level = 1;             // 1..10
+let WORDS = [];            // 이번 레벨에 실제 배치된 단어들
+let SIZE = 10, DIRS = [];
+let grid, placed, foundSet, selecting, startCell, curCells;
+let score, combo, best;
+
+const $ = id => document.getElementById(id);
+const boardEl=$("board"), wordsEl=$("words"), levelsEl=$("levels"),
+      statusEl=$("status"), winEl=$("win"), toastEl=$("toast");
+
+function rnd(n){ return Math.floor(Math.random()*n); }
+function sizeFor(lv){ return Math.min(8 + (lv-1), 14); }
+function dirsFor(lv){
+  if(lv<=2) return [DIR.H, DIR.V];
+  if(lv<=5) return [DIR.H, DIR.V, DIR.D1];
+  return [DIR.H, DIR.V, DIR.D1, DIR.D2];
+}
+
+/* ===== localStorage 안전 래퍼 ===== */
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+function bestKey(){ return `wf_best_${lang}_${level}`; }
+function clearedKey(lv){ return `wf_cleared_${lang}_${lv}`; }
+
+/* ===== 게임 생성 ===== */
+function newGame(){
+  SIZE = sizeFor(level);
+  DIRS = dirsFor(level);
+  const source = WORDS_DATA[lang][level-1].filter(w => w.length <= SIZE);
+  grid = Array.from({length:SIZE}, ()=> Array(SIZE).fill(null));
+  placed = [];
+
+  for(const word of source){
+    for(let tries=0; tries<500; tries++){
+      const {dr,dc} = DIRS[rnd(DIRS.length)];
+      const len = word.length;
+      const rMin = dr < 0 ? len-1 : 0;
+      const rMax = dr > 0 ? SIZE-len : SIZE-1;
+      const cMax = dc > 0 ? SIZE-len : SIZE-1;
+      const r = rMin + rnd(rMax - rMin + 1);
+      const c = rnd(cMax + 1);
+      let fits = true;
+      for(let i=0;i<len;i++){
+        const rr=r+dr*i, cc=c+dc*i;
+        if(grid[rr][cc]!==null && grid[rr][cc]!==word[i]){ fits=false; break; }
+      }
+      if(!fits) continue;
+      for(let i=0;i<len;i++) grid[r+dr*i][c+dc*i] = word[i];
+      placed.push({word, r, c, dr, dc, len});
+      break;
+    }
+  }
+  WORDS = placed.map(p=>p.word);
+
+  const f = FILLER[lang];
+  for(let r=0;r<SIZE;r++)
+    for(let c=0;c<SIZE;c++)
+      if(grid[r][c]===null) grid[r][c] = f[rnd(f.length)];
+
+  foundSet = new Set();
+  score = 0; combo = 0;
+  best = +(lsGet(bestKey()) || 0);
+  render();
+}
+
+/* ===== 렌더 ===== */
+function setCellSize(){
+  const gap = 4;
+  const avail = Math.min(window.innerWidth - 24, 470);
+  const px = Math.max(22, Math.min(46, Math.floor((avail - (SIZE+1)*gap) / SIZE)));
+  document.documentElement.style.setProperty("--cell", px+"px");
+}
+
+function render(){
+  setCellSize();
+  boardEl.style.gridTemplateColumns = `repeat(${SIZE}, var(--cell))`;
+  boardEl.innerHTML = "";
+  for(let r=0;r<SIZE;r++)
+    for(let c=0;c<SIZE;c++){
+      const d=document.createElement("div");
+      d.className="cell"; d.dataset.r=r; d.dataset.c=c; d.textContent=grid[r][c];
+      boardEl.appendChild(d);
+    }
+  wordsEl.innerHTML="";
+  for(const w of WORDS){
+    const s=document.createElement("span");
+    s.className="word"; s.dataset.word=w; s.textContent=w;
+    wordsEl.appendChild(s);
+  }
+  renderLevels();
+  markFound();
+  updateScore();
+  updateStatus();
+  winEl.classList.remove("show");
+}
+
+function renderLevels(){
+  levelsEl.innerHTML="";
+  for(let lv=1; lv<=TOTAL_LEVELS; lv++){
+    const b=document.createElement("button");
+    b.className="lv" + (lv===level?" active":"") + (lsGet(clearedKey(lv))?" cleared":"");
+    b.textContent=lv;
+    b.addEventListener("click", ()=>{ level=lv; newGame(); });
+    levelsEl.appendChild(b);
+  }
+}
+
+function cellAt(r,c){ return boardEl.children[r*SIZE + c]; }
+function getCellFromPoint(x,y){
+  const el=document.elementFromPoint(x,y);
+  return (el && el.classList.contains("cell")) ? el : null;
+}
+
+function lineCells(start,end){
+  const r1=+start.dataset.r, c1=+start.dataset.c, r2=+end.dataset.r, c2=+end.dataset.c;
+  const dr=r2-r1, dc=c2-c1;
+  if(!(dr===0 || dc===0 || Math.abs(dr)===Math.abs(dc))) return [start];
+  const len=Math.max(Math.abs(dr),Math.abs(dc));
+  const sr=Math.sign(dr), sc=Math.sign(dc), out=[];
+  for(let i=0;i<=len;i++) out.push(cellAt(r1+sr*i, c1+sc*i));
+  return out;
+}
+
+function clearSel(){ for(const el of boardEl.querySelectorAll(".cell.sel")) el.classList.remove("sel"); }
+function startSel(el){ selecting=true; startCell=el; curCells=[el]; clearSel(); el.classList.add("sel"); }
+function moveSel(el){
+  if(!selecting || !el) return;
+  curCells=lineCells(startCell, el);
+  clearSel();
+  for(const c of curCells) c.classList.add("sel");
+}
+function endSel(){
+  if(!selecting) return;
+  selecting=false;
+  const text=curCells.map(c=>c.textContent).join("");
+  const rev=curCells.slice().reverse().map(c=>c.textContent).join("");
+  let hit=null;
+  for(const w of WORDS) if(!foundSet.has(w) && (w===text||w===rev)){ hit=w; break; }
+  clearSel();
+  if(hit){ onFound(hit); }
+  else if(curCells.length>=2){ onMiss(); }
+}
+
+/* ===== 점수 ===== */
+function onFound(word){
+  foundSet.add(word);
+  combo++;
+  const gained = word.length * 100 * combo;
+  score += gained;
+  if(score > best){ best = score; lsSet(bestKey(), String(best)); }
+  showToast("+"+gained + (combo>=2 ? "  🔥x"+combo : ""));
+  $("combo").classList.toggle("on", combo>=2);
+  $("combo").textContent = combo>=2 ? ("🔥 x"+combo) : "";
+  markFound();
+  updateScore();
+  updateStatus();
+  checkWin();
+}
+function onMiss(){
+  combo=0;
+  $("combo").classList.remove("on");
+  $("combo").textContent="";
+  boardEl.classList.remove("miss"); void boardEl.offsetWidth; boardEl.classList.add("miss");
+}
+function showToast(t){
+  toastEl.textContent=t;
+  toastEl.classList.remove("fly"); void toastEl.offsetWidth; toastEl.classList.add("fly");
+}
+function updateScore(){
+  $("score").textContent=score;
+  $("best").textContent=best;
+  if(combo<2){ $("combo").classList.remove("on"); $("combo").textContent=""; }
+}
+
+function markFound(){
+  for(const p of placed){
+    if(!foundSet.has(p.word)) continue;
+    for(let i=0;i<p.len;i++) cellAt(p.r+p.dr*i, p.c+p.dc*i).classList.add("found");
+  }
+  for(const s of wordsEl.children) s.classList.toggle("done", foundSet.has(s.dataset.word));
+}
+function updateStatus(){ statusEl.textContent=`${foundSet.size} / ${WORDS.length} ${UI[lang].found}`; }
+
+function checkWin(){
+  if(WORDS.length===0 || foundSet.size!==WORDS.length) return;
+  lsSet(clearedKey(level), "1");
+  const u=UI[lang];
+  const isLast = level>=TOTAL_LEVELS;
+  $("win-title").textContent = isLast ? u.allclear : u.clear;
+  $("win-score").textContent = `${u.finalScore}: ${score}`;
+  $("next").style.display = isLast ? "none" : "";
+  renderLevels();
+  winEl.classList.add("show");
+}
+
+/* ===== UI 언어 ===== */
+function applyUI(){
+  const u=UI[lang];
+  document.documentElement.lang=lang;
+  $("title").textContent=u.title;
+  $("sub").textContent=u.sub;
+  $("lbl-score").textContent=u.score;
+  $("lbl-best").textContent=u.best;
+  $("newgame").textContent=u.newgame;
+  $("lang").textContent=u.langBtn;
+  $("again").textContent=u.again;
+  $("next").textContent=u.next;
+}
+
+/* ===== 이벤트 ===== */
+boardEl.addEventListener("mousedown", e=>{ const el=e.target.closest(".cell"); if(el){ e.preventDefault(); startSel(el); } });
+window.addEventListener("mousemove", e=>{ if(selecting) moveSel(getCellFromPoint(e.clientX,e.clientY)); });
+window.addEventListener("mouseup", endSel);
+boardEl.addEventListener("touchstart", e=>{ const t=e.touches[0]; const el=getCellFromPoint(t.clientX,t.clientY); if(el){ e.preventDefault(); startSel(el); } }, {passive:false});
+boardEl.addEventListener("touchmove", e=>{ if(!selecting) return; e.preventDefault(); const t=e.touches[0]; moveSel(getCellFromPoint(t.clientX,t.clientY)); }, {passive:false});
+window.addEventListener("touchend", endSel);
+window.addEventListener("resize", ()=>{ if(SIZE) setCellSize(); });
+
+$("newgame").addEventListener("click", newGame);
+$("again").addEventListener("click", newGame);
+$("next").addEventListener("click", ()=>{ if(level<TOTAL_LEVELS){ level++; newGame(); } });
+$("lang").addEventListener("click", ()=>{
+  lang = lang==="ko" ? "en" : "ko";
+  applyUI(); newGame();
+});
+
+applyUI();
+newGame();
+</script>
+</body>
+</html>
