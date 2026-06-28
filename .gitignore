@@ -1,3 +1,6 @@
+# 빌드 시 루트 index.html에서 생성되는 사본(단일 소스 = 루트 index.html) — 추적하지 않음
+android/app/src/main/assets/index.html
+
 # Android / Gradle
 android/.gradle/
 android/build/
